@@ -20,18 +20,16 @@ export default function SignIn() {
     if (!email || !password) { setErr("Enter your email and password"); return; }
     setLoading(true); setErr(null);
     try {
-      const u = await login(email.trim(), password);
+      const u = await login(email.trim(), password, ["customer", "flower_owner"]);
       if (u.role === "customer") router.replace("/(customer)/home");
       else if (u.role === "flower_owner") router.replace("/(owner)/dashboard");
-      else if (u.role === "admin") router.replace("/(admin)/overview");
     } catch (e: any) { setErr(e.message || "Sign-in failed"); }
     finally { setLoading(false); }
   };
 
-  const fillDemo = (role: "customer" | "owner" | "admin") => {
+  const fillDemo = (role: "customer" | "owner") => {
     if (role === "customer") { setEmail("customer@elaya.ph"); setPassword("Customer123!"); }
     if (role === "owner") { setEmail("owner@elaya.ph"); setPassword("Owner123!"); }
-    if (role === "admin") { setEmail("admin@elaya.ph"); setPassword("Admin123!"); }
   };
 
   return (
@@ -92,12 +90,15 @@ export default function SignIn() {
             <View style={{ flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm, flexWrap: "wrap" }}>
               <Pressable testID="demo-customer-btn" onPress={() => fillDemo("customer")} style={styles.chip}><Text style={styles.chipText}>Customer</Text></Pressable>
               <Pressable testID="demo-owner-btn" onPress={() => fillDemo("owner")} style={styles.chip}><Text style={styles.chipText}>Shop Owner</Text></Pressable>
-              <Pressable testID="demo-admin-btn" onPress={() => fillDemo("admin")} style={styles.chip}><Text style={styles.chipText}>Admin</Text></Pressable>
             </View>
           </View>
 
           <Pressable testID="go-signup-btn" onPress={() => router.push("/(auth)/sign-up")} style={{ marginTop: spacing.lg }}>
             <Text style={styles.footerLink}>New to Elaya? <Text style={{ color: colors.brandPrimary, fontWeight: "700" }}>Create an account</Text></Text>
+          </Pressable>
+
+          <Pressable testID="go-admin-signin-btn" onPress={() => router.push("/(auth)/admin-sign-in")} style={{ marginTop: spacing.md }}>
+            <Text style={styles.adminLink}>🛡️ Administrator login</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -127,4 +128,5 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2, backgroundColor: colors.brandTertiary, borderRadius: radius.pill },
   chipText: { color: colors.onBrandTertiary, fontSize: 12, fontWeight: "600" },
   footerLink: { textAlign: "center", color: colors.onSurfaceSecondary, fontSize: 14 },
+  adminLink: { textAlign: "center", color: colors.muted, fontSize: 13, fontWeight: "600" },
 });

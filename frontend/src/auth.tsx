@@ -7,7 +7,7 @@ export type User = { id: string; name: string; email: string; role: Role; status
 type AuthCtx = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (email: string, password: string, allowedRoles?: Role[]) => Promise<User>;
   register: (data: { name: string; email: string; password: string; role: Role }) => Promise<User>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -29,8 +29,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { (async () => { await refresh(); setLoading(false); })(); }, [refresh]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, allowedRoles?: Role[]) => {
     const res = await api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    if (allowedRoles && !allowedRoles.includes(res.user.role)) {
+      // Reject before persisting anything so no partial session / redirect race occurs.
+      const isAdmin = res.user.role === "admin";
+      throw new Error(
+        isAdmin
+          ? "Admin accounts must sign in through the Admin Portal."
+          : "This portal is for administrators only. Please use the main app sign-in."
+      );
+    }
     await tokenStore.set(res.access_token);
     setUser(res.user);
     return res.user as User;
