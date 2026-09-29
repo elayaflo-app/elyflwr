@@ -83,7 +83,11 @@ export default function AdminSignIn() {
             </Pressable>
           </View>
 
-          <Pressable testID="admin-to-user-signin" onPress={() => router.replace("/(auth)/sign-in")} style={{ marginTop: spacing.xl }}>
+          <Pressable testID="admin-to-signup" onPress={() => router.push("/(auth)/admin-sign-up")} style={{ marginTop: spacing.xl }}>
+            <Text style={styles.footerLink}>Need an admin account? <Text style={{ color: colors.brandSecondary, fontWeight: "700" }}>Create one</Text></Text>
+          </Pressable>
+
+          <Pressable testID="admin-to-user-signin" onPress={() => router.replace("/(auth)/sign-in")} style={{ marginTop: spacing.md }}>
             <Text style={styles.footerLink}>Not an admin? <Text style={{ color: colors.brandSecondary, fontWeight: "700" }}>Customer / Shop Owner sign-in</Text></Text>
           </Pressable>
         </ScrollView>

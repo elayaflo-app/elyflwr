@@ -25,6 +25,7 @@ JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGO = os.environ.get("JWT_ALGO", "HS256")
 ACCESS_MIN = int(os.environ.get("ACCESS_TOKEN_MINUTES", "1440"))
 PAYMONGO_SECRET = os.environ.get("PAYMONGO_SECRET_KEY", "")
+ADMIN_SIGNUP_CODE = os.environ.get("ADMIN_SIGNUP_CODE", "")
 APP_URL = os.environ.get("APP_URL", "").rstrip("/")
 PAYMONGO_BASE = "https://api.paymongo.com/v1"
 
@@ -46,6 +47,12 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
     role: Role = "customer"
+
+class AdminRegisterIn(BaseModel):
+    name: str
+    email: EmailStr
+    password: str = Field(min_length=6)
+    admin_code: str
 
 class LoginIn(BaseModel):
     email: EmailStr
@@ -226,6 +233,21 @@ async def register(data: RegisterIn):
     uid = str(uuid.uuid4())
     user = {"id": uid, "name": data.name, "email": email, "password_hash": hash_pw(data.password),
             "role": data.role, "status": "active", "created_at": now_iso()}
+    await db.users.insert_one(user)
+    return TokenOut(access_token=make_token(user), user=public_user(user))
+
+@api.post("/auth/register-admin", response_model=TokenOut)
+async def register_admin(data: AdminRegisterIn):
+    if not ADMIN_SIGNUP_CODE:
+        raise HTTPException(500, "Admin registration is not configured")
+    if data.admin_code.strip() != ADMIN_SIGNUP_CODE:
+        raise HTTPException(403, "Invalid admin access code")
+    email = data.email.lower()
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(409, "Email already registered")
+    uid = str(uuid.uuid4())
+    user = {"id": uid, "name": data.name, "email": email, "password_hash": hash_pw(data.password),
+            "role": "admin", "status": "active", "created_at": now_iso()}
     await db.users.insert_one(user)
     return TokenOut(access_token=make_token(user), user=public_user(user))
 

@@ -9,6 +9,7 @@ type AuthCtx = {
   loading: boolean;
   login: (email: string, password: string, allowedRoles?: Role[]) => Promise<User>;
   register: (data: { name: string; email: string; password: string; role: Role }) => Promise<User>;
+  registerAdmin: (data: { name: string; email: string; password: string; admin_code: string }) => Promise<User>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -52,7 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user as User;
   };
 
+  const registerAdmin = async (data: { name: string; email: string; password: string; admin_code: string }) => {
+    const res = await api("/auth/register-admin", { method: "POST", body: JSON.stringify(data) });
+    await tokenStore.set(res.access_token);
+    setUser(res.user);
+    return res.user as User;
+  };
+
   const logout = async () => { await tokenStore.del(); setUser(null); };
 
-  return <Ctx.Provider value={{ user, loading, login, register, logout, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, loading, login, register, registerAdmin, logout, refresh }}>{children}</Ctx.Provider>;
 }
