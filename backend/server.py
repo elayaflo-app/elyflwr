@@ -789,7 +789,18 @@ async def on_stop():
     client.close()
 
 # ---------- Seed ----------
+async def ensure_seed_state():
+    """Keep seeded demo accounts active and demo shops approved on every startup.
+    Scoped strictly to known seed emails/shops so it never touches real user data."""
+    await db.users.update_many(
+        {"email": {"$in": ["admin@elaya.ph", "customer@elaya.ph", "owner@elaya.ph", "owner2@elaya.ph", "pending@elaya.ph"]}},
+        {"$set": {"status": "active"}},
+    )
+    await db.shops.update_many({"shop_name": {"$in": ["Bloom & Petal", "Rosa Del Sol"]}}, {"$set": {"status": "approved"}})
+
 async def seed():
+    # Idempotent guard: keep the demo/seed accounts usable across restarts and test drift.
+    await ensure_seed_state()
     if await db.users.count_documents({}) > 0:
         return
     admin = {"id": str(uuid.uuid4()), "name": "Admin", "email": "admin@elaya.ph", "password_hash": hash_pw("Admin123!"), "role": "admin", "status": "active", "created_at": now_iso()}
