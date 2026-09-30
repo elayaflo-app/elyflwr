@@ -73,12 +73,15 @@ export default function ProductDetail() {
           )}
           <Text style={styles.desc}>{p.description || "Handcrafted with love in Biñan, Laguna."}</Text>
 
-          {p.flowers_included && p.flowers_included.length > 0 && (
-            <View style={{ marginTop: spacing.md }}>
-              <Text style={styles.label}>Flowers Included</Text>
-              <Text style={styles.info}>{p.flowers_included.join(", ")}{p.number_of_flowers ? ` · ${p.number_of_flowers} stems` : ""}</Text>
-            </View>
-          )}
+          {(() => {
+            const allFlowers = [...(p.primary_flowers || []), ...(p.flowers_included || [])];
+            return allFlowers.length > 0 ? (
+              <View style={{ marginTop: spacing.md }}>
+                <Text style={styles.label}>Flowers Included</Text>
+                <Text style={styles.info}>{allFlowers.join(", ")}{p.number_of_flowers ? ` · ${p.number_of_flowers} stems` : ""}</Text>
+              </View>
+            ) : null;
+          })()}
           {p.wrapping ? (
             <View style={{ marginTop: spacing.sm }}>
               <Text style={styles.label}>Wrapping</Text>

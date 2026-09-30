@@ -104,6 +104,7 @@ class ProductIn(BaseModel):
     availability: bool = True
     colors: Optional[List[str]] = None
     flowers_included: Optional[List[str]] = None
+    primary_flowers: Optional[List[str]] = None
     number_of_flowers: Optional[int] = None
     wrapping: Optional[str] = None
     ribbon: Optional[str] = None

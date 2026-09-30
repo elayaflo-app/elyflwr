@@ -11,12 +11,18 @@ import { colors, spacing, radius } from "@/src/theme";
 import { api, mediaUrl } from "@/src/api";
 import { uploadFile } from "@/src/upload";
 
+const PRIMARY_FLOWERS = [
+  "Anthurium", "Carnation", "Eustoma", "Gerbera Daisy", "Lily",
+  "Orchid", "Rose", "Sunflower", "Chrysanthemum", "Tulip",
+];
+
 export default function AddBouquet() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [primary, setPrimary] = useState<string[]>([]);
   const [flowers, setFlowers] = useState("");
   const [count, setCount] = useState("");
   const [wrapping, setWrapping] = useState("");
@@ -45,9 +51,13 @@ export default function AddBouquet() {
 
   const removeImg = (i: number) => setImages((cur) => cur.filter((_, idx) => idx !== i));
 
+  const togglePrimary = (f: string) =>
+    setPrimary((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]));
+
   const mut = useMutation({
     mutationFn: () => api("/owner/products", { method: "POST", body: JSON.stringify({
       name, description, images,
+      primary_flowers: primary.length ? primary : undefined,
       flowers_included: flowers ? flowers.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
       number_of_flowers: count ? parseInt(count) : undefined,
       wrapping: wrapping || undefined,
@@ -88,7 +98,23 @@ export default function AddBouquet() {
 
         <Field label="Bouquet Name *"><TextInput testID="name-input" value={name} onChangeText={setName} placeholder="Romantic Red Roses" placeholderTextColor={colors.muted} style={styles.input} /></Field>
         <Field label="Description"><TextInput testID="desc-input" value={description} onChangeText={setDescription} placeholder="A classic dozen roses..." placeholderTextColor={colors.muted} multiline style={[styles.input, { minHeight: 70 }]} /></Field>
-        <Field label="Flowers Included (comma-separated)"><TextInput testID="flowers-input" value={flowers} onChangeText={setFlowers} placeholder="Red Rose, Baby's Breath" placeholderTextColor={colors.muted} style={styles.input} /></Field>
+
+        <View style={{ gap: spacing.xs }}>
+          <Text style={styles.label}>Primary Flowers</Text>
+          <Text style={styles.hint}>Tap the main flower types used in this bouquet.</Text>
+          <View style={styles.chipWrap}>
+            {PRIMARY_FLOWERS.map((f) => {
+              const on = primary.includes(f);
+              return (
+                <Pressable key={f} testID={`primary-flower-${f}`} onPress={() => togglePrimary(f)} style={[styles.selChip, on && styles.selChipOn]}>
+                  <Text style={[styles.selChipText, on && styles.selChipTextOn]}>{on ? "✓ " : ""}{f}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <Field label="Flowers Included (comma-separated)"><TextInput testID="flowers-input" value={flowers} onChangeText={setFlowers} placeholder="Baby's Breath, Eucalyptus, other fillers" placeholderTextColor={colors.muted} style={styles.input} /></Field>
         <View style={{ flexDirection: "row", gap: spacing.md }}>
           <Field label="No. of Flowers" flex><TextInput testID="count-input" value={count} onChangeText={setCount} keyboardType="number-pad" placeholder="12" placeholderTextColor={colors.muted} style={styles.input} /></Field>
           <Field label="Wrapping" flex><TextInput testID="wrap-input" value={wrapping} onChangeText={setWrapping} placeholder="White Wrapper" placeholderTextColor={colors.muted} style={styles.input} /></Field>
@@ -120,6 +146,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: "700", color: colors.onSurface },
   label: { color: colors.onSurfaceSecondary, fontSize: 13, fontWeight: "600" },
   hint: { color: colors.muted, fontSize: 12, marginTop: -6 },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs },
+  selChip: { paddingHorizontal: spacing.md, paddingVertical: 9, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surfaceSecondary },
+  selChipOn: { backgroundColor: colors.brandPrimary, borderColor: colors.brandPrimary },
+  selChipText: { color: colors.onSurfaceSecondary, fontSize: 13, fontWeight: "600" },
+  selChipTextOn: { color: colors.onBrandPrimary },
   input: { backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12, fontSize: 15, color: colors.onSurface },
   thumbWrap: { width: 90, height: 90, borderRadius: radius.md, overflow: "hidden" },
   thumb: { width: "100%", height: "100%", backgroundColor: colors.surfaceSecondary },
